@@ -1,0 +1,82 @@
+syntax = "proto3";
+
+option go_package = "/grpc/pb;pb";
+
+package auth;
+
+service Auth {
+  rpc Register(RegisterRequest) returns (RegisterResponse);
+  rpc ConfirmRegister(ConfirmRegisterRequest) returns (ConfirmRegisterResponse);
+  rpc Login(LoginRequest) returns (LoginResponse);
+  rpc RecoverPassword(RecoverPasswordRequest) returns (RecoverPasswordResponse);
+  rpc Verify(VerifyRequest) returns (VerifyResponse);
+  rpc UpdateTokens(UpdateTokensRequest) returns (UpdateTokensResponse);
+}
+
+message RegisterRequest {
+  string email = 1;
+  string password = 2;
+  string confirmPassword = 3;
+  string ip = 4;
+}
+
+message RegisterResponse {
+  bool   success = 1;
+  string data = 2;
+}
+
+message ConfirmRegisterRequest {
+  string email = 1;
+  string password = 2;
+  string ip = 3;
+  int32  code = 4;
+}
+
+message ConfirmRegisterResponse {
+  bool            success = 1;
+  repeated Tokens data = 2;
+}
+
+message Tokens {
+  string accessToken = 1;
+  string refreshToken = 2;
+}
+
+message LoginRequest {
+  string email = 1;
+  string password = 2;
+  string ip = 3;
+}
+
+message LoginResponse {
+  bool            success = 1;
+  repeated Tokens data = 2;
+  int32           code = 3;
+}
+
+message VerifyRequest {
+  string token = 1;
+}
+
+message VerifyResponse {
+  bool  success = 1;
+  int32 code = 3;
+}
+
+message RecoverPasswordRequest {
+  string email = 1;
+}
+
+message RecoverPasswordResponse {
+  bool   success = 1;
+  string data = 2;
+}
+
+message UpdateTokensRequest {
+  string refreshToken = 1;
+}
+
+message UpdateTokensResponse {
+  bool success = 1;
+  repeated Tokens data = 2;
+}
