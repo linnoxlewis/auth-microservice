@@ -1,6 +1,7 @@
 package app
 
 import (
+	"auth-microservice/src/config"
 	"auth-microservice/src/server"
 	"context"
 	"os"
@@ -9,6 +10,7 @@ import (
 )
 
 func Run(ctx context.Context) {
+	config.Init()
 	srv := server.NewGrpcServer(":80")
 	go srv.StartServer()
 	defer srv.StopServer()

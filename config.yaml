@@ -1,0 +1,16 @@
+db:
+  host: "127.0.0.1"
+  port: "5432"
+  dbname: "auth_mcsrv"
+  username: "postgres"
+  password: "postgres"
+
+server:
+  port : ":8080"
+
+jwt:
+  accessDuration : 1800
+  refreshDuration : 3600
+  jwtAccessKey: "testAccessKey"
+  jwtRefreshKey: "testRefreshKey"
+
