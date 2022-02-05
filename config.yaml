@@ -11,6 +11,7 @@ server:
 jwt:
   accessDuration : 1800
   refreshDuration : 3600
-  jwtAccessKey: "testAccessKey"
-  jwtRefreshKey: "testRefreshKey"
+  secretKey: "testAccessKey"
+  audience : "mcs_auth"
+  issue: "mcs_auth"
 

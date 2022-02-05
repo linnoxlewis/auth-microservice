@@ -2,8 +2,11 @@ package app
 
 import (
 	"auth-microservice/src/config"
+	"auth-microservice/src/repository"
 	"auth-microservice/src/server"
 	"auth-microservice/src/services/db"
+	"auth-microservice/src/services/jwt"
+	"auth-microservice/src/usecases"
 	"context"
 	"os"
 	"os/signal"
@@ -16,7 +19,12 @@ func Run(ctx context.Context) {
 	database :=db.GetDB()
 	defer db.CloseDB(database)
 
-	srv := server.NewGrpcServer(":80")
+	userRepo := repository.NewUserRepository(database)
+	jwtService :=jwt.NewJwtService()
+
+	useCaseManager := usecases.NewUseCase(jwtService,userRepo)
+
+	srv := server.NewGrpcServer(":80",useCaseManager)
 	go srv.StartServer()
 	defer srv.StopServer()
 

@@ -2,6 +2,7 @@ package server
 
 import (
 	"auth-microservice/src/server/grpc/pb"
+	"auth-microservice/src/usecases"
 	"google.golang.org/grpc"
 	"log"
 	"net"
@@ -17,9 +18,9 @@ type GrpcServer struct {
 	Port       string
 }
 
-func NewGrpcServer(port string) *GrpcServer {
+func NewGrpcServer(port string, useCaseManager usecases.UseCaseInterface) *GrpcServer {
 	srv := grpc.NewServer()
-	authSrv := NewAuthServer()
+	authSrv := NewAuthServer(useCaseManager)
 	pb.RegisterAuthServer(srv,authSrv)
 
 	return &GrpcServer{server: srv, Port: port}

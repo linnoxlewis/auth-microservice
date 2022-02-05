@@ -1,21 +1,23 @@
 package server
 
-import "auth-microservice/src/server/grpc/pb"
+import (
+	"auth-microservice/src/server/grpc/pb"
+	"auth-microservice/src/usecases"
+)
 import "context"
 
 type AuthServer struct {
+	useCaseManager usecases.UseCaseInterface
 	pb.UnimplementedAuthServer
 }
 
-func NewAuthServer() * AuthServer {
-	return &AuthServer{}
+func NewAuthServer(useCaseManager usecases.UseCaseInterface) * AuthServer {
+	return &AuthServer{
+		useCaseManager: useCaseManager,
+	}
 }
 
 func (a *AuthServer) Register(ctx context.Context, request *pb.RegisterRequest) (*pb.RegisterResponse, error) {
-	panic("implement me")
-}
-
-func (a *AuthServer) ConfirmRegister(ctx context.Context, request *pb.ConfirmRegisterRequest) (*pb.ConfirmRegisterResponse, error) {
 	panic("implement me")
 }
 
