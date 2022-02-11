@@ -14,17 +14,17 @@ import (
 )
 
 func Run(ctx context.Context) {
-	config.Init()
+	appCfg := config.Init()
+	envCfg := config.NewEnvConfig()
 
-	database :=db.GetDB()
+	database := db.GetDB(envCfg)
 	defer db.CloseDB(database)
 
 	userRepo := repository.NewUserRepository(database)
-	jwtService :=jwt.NewJwtService()
+	jwtService := jwt.NewJwtService(appCfg)
+	useCaseManager := usecases.NewUseCase(appCfg, envCfg, jwtService, userRepo)
 
-	useCaseManager := usecases.NewUseCase(jwtService,userRepo)
-
-	srv := server.NewGrpcServer(":80",useCaseManager)
+	srv := server.NewGrpcServer(envCfg.GetServerPort(), useCaseManager)
 	go srv.StartServer()
 	defer srv.StopServer()
 

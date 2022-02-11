@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"auth-microservice/src/helpers/stringHelper"
 	"auth-microservice/src/helpers/userStatus"
 	"auth-microservice/src/models"
 	"github.com/jinzhu/gorm"
@@ -19,24 +18,23 @@ func NewUserRepository(db *gorm.DB) *UserRepository {
 
 func (u *UserRepository) GetUserByEmail(email string) *models.User {
 	user := &models.User{}
-	u.db.Where("email = ?",email).First(user)
+	u.db.Where("email = ?", email).First(user)
 
 	return user
 }
 
 func (u *UserRepository) GetUserById(id int) *models.User {
 	user := &models.User{}
-	u.db.First(user,id)
+	u.db.First(user, id)
 
 	return user
 }
 
 func (u *UserRepository) CreateUser(email string, password string) (*models.User, error) {
 	user := &models.User{
-		Email: email,
+		Email:    email,
 		Password: password,
-		Status: userStatus.NOT_ACTIVE,
-		TwofactorCode: stringHelper.RandStringInt(6),
+		Status:   userStatus.ACTIVE,
 	}
 	err := u.db.Create(user).Error
 	if err != nil {
@@ -44,4 +42,3 @@ func (u *UserRepository) CreateUser(email string, password string) (*models.User
 	}
 	return user, nil
 }
-

@@ -7,10 +7,9 @@ import (
 
 type User struct {
 	gorm.Model
-	Email         string
-	Password      string
-	Status        int
-	TwofactorCode string
+	Email    string
+	Password string
+	Status   int
 }
 
 func (u *User) IsActive() bool {

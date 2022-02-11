@@ -5,33 +5,29 @@ option go_package = "/grpc/pb;pb";
 package auth;
 
 service Auth {
-  rpc Register(RegisterRequest) returns (RegisterResponse);
-  rpc Login(LoginRequest) returns (LoginResponse);
-  rpc RecoverPassword(RecoverPasswordRequest) returns (RecoverPasswordResponse);
-  rpc Verify(VerifyRequest) returns (VerifyResponse);
-  rpc UpdateTokens(UpdateTokensRequest) returns (UpdateTokensResponse);
+  rpc Register(RegisterRequest) returns (Token);
+  rpc ConfirmRegister(Token) returns (User);
+  rpc Login(LoginRequest) returns (Tokens);
+  rpc Verify(Token) returns (Success);
+  rpc UpdateTokens(Token) returns (Tokens);
 }
 
 message RegisterRequest {
   string email = 1;
   string password = 2;
-  string confirmPassword = 3;
-}
-
-message RegisterResponse {
-  bool   success = 1;
-  string data = 2;
-}
-
-message ConfirmRegisterRequest {
-  string email = 1;
-  string password = 2;
-  int32  code = 3;
 }
 
 message ConfirmRegisterResponse {
-  bool            success = 1;
-  repeated Tokens data = 2;
+  Tokens tokens = 1;
+}
+
+message Token {
+  string token = 1;
+}
+
+message User {
+  int64 userId = 1;
+  string email = 2;
 }
 
 message Tokens {
@@ -44,35 +40,7 @@ message LoginRequest {
   string password = 2;
 }
 
-message LoginResponse {
-  bool            success = 1;
-  repeated Tokens data = 2;
-  int32           code = 3;
-}
-
-message VerifyRequest {
-  string token = 1;
-}
-
-message VerifyResponse {
-  bool  success = 1;
-  int32 code = 3;
-}
-
-message RecoverPasswordRequest {
-  string email = 1;
-}
-
-message RecoverPasswordResponse {
-  bool   success = 1;
-  string data = 2;
-}
-
-message UpdateTokensRequest {
-  string refreshToken = 1;
-}
-
-message UpdateTokensResponse {
+message Success {
   bool success = 1;
-  repeated Tokens data = 2;
+  string data = 2;
 }

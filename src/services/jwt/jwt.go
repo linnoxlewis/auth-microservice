@@ -1,57 +1,88 @@
 package jwt
 
 import (
+	"auth-microservice/src/config"
+	"auth-microservice/src/models"
 	"errors"
-	"fmt"
 	"github.com/golang-jwt/jwt"
-	"github.com/spf13/viper"
 )
 
 type JwtInterface interface {
-	GenerateToken(claims jwt.Claims) (string, error)
-	ParseToken(strToken string) (*jwt.MapClaims, error)
+	GenerateToken(claims jwt.Claims, secretKey string) (string, error)
+	ParseRegisterToken(strToken string, secretKey string) (*models.RegisterClaims, error)
+	ParseAuthToken(strToken string, secretKey string) (*models.AuthClaims, error)
+	Verify(strToken string, secretKey string) (bool, error)
 }
+
 type JwtService struct {
-	key      string
 	issue    string
 	audience string
 }
 
-func NewJwtService() *JwtService {
-	secretKey := fmt.Sprintf("%s", viper.Get("jwt.secretKey"))
-	issue := fmt.Sprintf("%s", viper.Get("jwt.issue"))
-	audience := fmt.Sprintf("%s", viper.Get("jwt.audience"))
+type Tokens struct {
+	AccessToken  string
+	RefreshToken string
+}
+
+var invalidSingErr = errors.New("Invalid method sign!")
+var claimsError = errors.New("Get token claims error")
+
+func NewJwtService(appCfg *config.AppConf) *JwtService {
 	return &JwtService{
-		key:      secretKey,
-		issue:    issue,
-		audience: audience,
+		issue:    appCfg.GetJwtIssue(),
+		audience: appCfg.GetJwtAudience(),
 	}
 }
 
-func (j *JwtService) GenerateToken(claims jwt.Claims) (string, error) {
+func (j *JwtService) GenerateToken(claims jwt.Claims, secretKey string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte(j.key))
+	return token.SignedString([]byte(secretKey))
 }
 
-func (j *JwtService) ParseToken(strToken string) (*jwt.MapClaims, error) {
-	claims := &jwt.MapClaims{}
-	token, parseErr := jwt.ParseWithClaims(strToken, claims, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, errors.New("Invalid method signning!")
-		}
-		return []byte(j.key), nil
-	})
-	if parseErr != nil {
-		return nil, parseErr
+func (j *JwtService) ParseRegisterToken(strToken string, secretKey string) (*models.RegisterClaims, error) {
+	claims := &models.RegisterClaims{}
+	token, err := j.parse(strToken, claims, secretKey)
+	if err != nil {
+		return nil, err
 	}
-	if !token.Valid {
-		return nil, errors.New("Invalid token error")
+	clms, ok := token.Claims.(*models.RegisterClaims)
+	if ok && token.Valid {
+		return clms, nil
+	} else {
+		return nil, claimsError
+	}
+}
+
+func (j *JwtService) ParseAuthToken(strToken string, secretKey string) (*models.AuthClaims, error) {
+	claims := &models.AuthClaims{}
+	token, err := j.parse(strToken, claims, secretKey)
+	if err != nil {
+		return nil, err
+	}
+	clms, ok := token.Claims.(*models.AuthClaims)
+	if ok && token.Valid {
+		return clms, nil
+	} else {
+		return nil, claimsError
+	}
+}
+
+func (j *JwtService) Verify(strToken string, secretKey string) (bool, error) {
+	token, parseErr := j.parse(strToken, jwt.StandardClaims{}, secretKey)
+	if parseErr != nil {
+		return false, parseErr
 	}
 
-	claims, ok := token.Claims.(*jwt.MapClaims)
-	if ok && token.Valid {
-		return claims, nil
-	} else {
-		return nil, fmt.Errorf("Get token claims error")
-	}
+	return token.Valid, nil
+}
+
+func (j *JwtService) parse(strToken string, model jwt.Claims, key string) (*jwt.Token, error) {
+	token, parseErr := jwt.ParseWithClaims(strToken, model, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, invalidSingErr
+		}
+		return []byte(key), nil
+	})
+
+	return token, parseErr
 }

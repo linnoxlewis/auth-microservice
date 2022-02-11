@@ -1,0 +1,7 @@
+jwt:
+  accessDuration : 1800
+  refreshDuration : 3600
+  registerDuration : 3600
+  audience : "mcs_auth"
+  issue: "mcs_auth"
+

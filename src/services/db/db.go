@@ -1,22 +1,22 @@
 package db
 
 import (
+	"auth-microservice/src/config"
 	"fmt"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
-	"github.com/spf13/viper"
 	"log"
 )
 
 var db *gorm.DB
 
-func Init() *gorm.DB {
+func newDb(cfg *config.EnvConfig) *gorm.DB {
 	log.Println("Start database Connection")
-	username := viper.Get("db.username")
-	password := viper.Get("db.password")
-	dbName := viper.Get("db.dbname")
-	dbHost := viper.Get("db.host")
-	dbPort := viper.Get("db.port")
+	username := cfg.GetDbUsername()
+	password := cfg.GetDbPassword()
+	dbName := cfg.GetDbName()
+	dbHost := cfg.GetDbHost()
+	dbPort := cfg.GetDbPort()
 
 	dbUri := fmt.Sprintf("host=%s user=%s dbname=%s port=%s sslmode=disable password=%s", dbHost, username, dbName, dbPort, password)
 	db, err := gorm.Open("postgres", dbUri)
@@ -26,15 +26,15 @@ func Init() *gorm.DB {
 	return db
 }
 
-func GetDB() *gorm.DB {
+func GetDB(cfg *config.EnvConfig) *gorm.DB {
 	if db == nil {
-		db = Init()
+		db = newDb(cfg)
 	}
 
 	return db
 }
 
-func CloseDB(db *gorm.DB){
+func CloseDB(db *gorm.DB) {
 	log.Println("Close database Connection")
 	_ = db.Close()
 }

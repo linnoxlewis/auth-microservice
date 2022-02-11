@@ -18,12 +18,11 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AuthClient interface {
-	Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*RegisterResponse, error)
-	ConfirmRegister(ctx context.Context, in *ConfirmRegisterRequest, opts ...grpc.CallOption) (*ConfirmRegisterResponse, error)
-	Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*LoginResponse, error)
-	RecoverPassword(ctx context.Context, in *RecoverPasswordRequest, opts ...grpc.CallOption) (*RecoverPasswordResponse, error)
-	Verify(ctx context.Context, in *VerifyRequest, opts ...grpc.CallOption) (*VerifyResponse, error)
-	UpdateTokens(ctx context.Context, in *UpdateTokensRequest, opts ...grpc.CallOption) (*UpdateTokensResponse, error)
+	Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*Token, error)
+	ConfirmRegister(ctx context.Context, in *Token, opts ...grpc.CallOption) (*User, error)
+	Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*Tokens, error)
+	Verify(ctx context.Context, in *Token, opts ...grpc.CallOption) (*Success, error)
+	UpdateTokens(ctx context.Context, in *Token, opts ...grpc.CallOption) (*Tokens, error)
 }
 
 type authClient struct {
@@ -34,8 +33,8 @@ func NewAuthClient(cc grpc.ClientConnInterface) AuthClient {
 	return &authClient{cc}
 }
 
-func (c *authClient) Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*RegisterResponse, error) {
-	out := new(RegisterResponse)
+func (c *authClient) Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*Token, error) {
+	out := new(Token)
 	err := c.cc.Invoke(ctx, "/auth.Auth/Register", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -43,8 +42,8 @@ func (c *authClient) Register(ctx context.Context, in *RegisterRequest, opts ...
 	return out, nil
 }
 
-func (c *authClient) ConfirmRegister(ctx context.Context, in *ConfirmRegisterRequest, opts ...grpc.CallOption) (*ConfirmRegisterResponse, error) {
-	out := new(ConfirmRegisterResponse)
+func (c *authClient) ConfirmRegister(ctx context.Context, in *Token, opts ...grpc.CallOption) (*User, error) {
+	out := new(User)
 	err := c.cc.Invoke(ctx, "/auth.Auth/ConfirmRegister", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -52,8 +51,8 @@ func (c *authClient) ConfirmRegister(ctx context.Context, in *ConfirmRegisterReq
 	return out, nil
 }
 
-func (c *authClient) Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*LoginResponse, error) {
-	out := new(LoginResponse)
+func (c *authClient) Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*Tokens, error) {
+	out := new(Tokens)
 	err := c.cc.Invoke(ctx, "/auth.Auth/Login", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -61,17 +60,8 @@ func (c *authClient) Login(ctx context.Context, in *LoginRequest, opts ...grpc.C
 	return out, nil
 }
 
-func (c *authClient) RecoverPassword(ctx context.Context, in *RecoverPasswordRequest, opts ...grpc.CallOption) (*RecoverPasswordResponse, error) {
-	out := new(RecoverPasswordResponse)
-	err := c.cc.Invoke(ctx, "/auth.Auth/RecoverPassword", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *authClient) Verify(ctx context.Context, in *VerifyRequest, opts ...grpc.CallOption) (*VerifyResponse, error) {
-	out := new(VerifyResponse)
+func (c *authClient) Verify(ctx context.Context, in *Token, opts ...grpc.CallOption) (*Success, error) {
+	out := new(Success)
 	err := c.cc.Invoke(ctx, "/auth.Auth/Verify", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -79,8 +69,8 @@ func (c *authClient) Verify(ctx context.Context, in *VerifyRequest, opts ...grpc
 	return out, nil
 }
 
-func (c *authClient) UpdateTokens(ctx context.Context, in *UpdateTokensRequest, opts ...grpc.CallOption) (*UpdateTokensResponse, error) {
-	out := new(UpdateTokensResponse)
+func (c *authClient) UpdateTokens(ctx context.Context, in *Token, opts ...grpc.CallOption) (*Tokens, error) {
+	out := new(Tokens)
 	err := c.cc.Invoke(ctx, "/auth.Auth/UpdateTokens", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -92,34 +82,31 @@ func (c *authClient) UpdateTokens(ctx context.Context, in *UpdateTokensRequest, 
 // All implementations must embed UnimplementedAuthServer
 // for forward compatibility
 type AuthServer interface {
-	Register(context.Context, *RegisterRequest) (*RegisterResponse, error)
-	ConfirmRegister(context.Context, *ConfirmRegisterRequest) (*ConfirmRegisterResponse, error)
-	Login(context.Context, *LoginRequest) (*LoginResponse, error)
-	RecoverPassword(context.Context, *RecoverPasswordRequest) (*RecoverPasswordResponse, error)
-	Verify(context.Context, *VerifyRequest) (*VerifyResponse, error)
-	UpdateTokens(context.Context, *UpdateTokensRequest) (*UpdateTokensResponse, error)
+	Register(context.Context, *RegisterRequest) (*Token, error)
+	ConfirmRegister(context.Context, *Token) (*User, error)
+	Login(context.Context, *LoginRequest) (*Tokens, error)
+	Verify(context.Context, *Token) (*Success, error)
+	UpdateTokens(context.Context, *Token) (*Tokens, error)
+	mustEmbedUnimplementedAuthServer()
 }
 
 // UnimplementedAuthServer must be embedded to have forward compatible implementations.
 type UnimplementedAuthServer struct {
 }
 
-func (UnimplementedAuthServer) Register(context.Context, *RegisterRequest) (*RegisterResponse, error) {
+func (UnimplementedAuthServer) Register(context.Context, *RegisterRequest) (*Token, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Register not implemented")
 }
-func (UnimplementedAuthServer) ConfirmRegister(context.Context, *ConfirmRegisterRequest) (*ConfirmRegisterResponse, error) {
+func (UnimplementedAuthServer) ConfirmRegister(context.Context, *Token) (*User, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ConfirmRegister not implemented")
 }
-func (UnimplementedAuthServer) Login(context.Context, *LoginRequest) (*LoginResponse, error) {
+func (UnimplementedAuthServer) Login(context.Context, *LoginRequest) (*Tokens, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Login not implemented")
 }
-func (UnimplementedAuthServer) RecoverPassword(context.Context, *RecoverPasswordRequest) (*RecoverPasswordResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RecoverPassword not implemented")
-}
-func (UnimplementedAuthServer) Verify(context.Context, *VerifyRequest) (*VerifyResponse, error) {
+func (UnimplementedAuthServer) Verify(context.Context, *Token) (*Success, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Verify not implemented")
 }
-func (UnimplementedAuthServer) UpdateTokens(context.Context, *UpdateTokensRequest) (*UpdateTokensResponse, error) {
+func (UnimplementedAuthServer) UpdateTokens(context.Context, *Token) (*Tokens, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateTokens not implemented")
 }
 func (UnimplementedAuthServer) mustEmbedUnimplementedAuthServer() {}
@@ -154,7 +141,7 @@ func _Auth_Register_Handler(srv interface{}, ctx context.Context, dec func(inter
 }
 
 func _Auth_ConfirmRegister_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ConfirmRegisterRequest)
+	in := new(Token)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -166,7 +153,7 @@ func _Auth_ConfirmRegister_Handler(srv interface{}, ctx context.Context, dec fun
 		FullMethod: "/auth.Auth/ConfirmRegister",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthServer).ConfirmRegister(ctx, req.(*ConfirmRegisterRequest))
+		return srv.(AuthServer).ConfirmRegister(ctx, req.(*Token))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -189,26 +176,8 @@ func _Auth_Login_Handler(srv interface{}, ctx context.Context, dec func(interfac
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Auth_RecoverPassword_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RecoverPasswordRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AuthServer).RecoverPassword(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/auth.Auth/RecoverPassword",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthServer).RecoverPassword(ctx, req.(*RecoverPasswordRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _Auth_Verify_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(VerifyRequest)
+	in := new(Token)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -220,13 +189,13 @@ func _Auth_Verify_Handler(srv interface{}, ctx context.Context, dec func(interfa
 		FullMethod: "/auth.Auth/Verify",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthServer).Verify(ctx, req.(*VerifyRequest))
+		return srv.(AuthServer).Verify(ctx, req.(*Token))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Auth_UpdateTokens_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateTokensRequest)
+	in := new(Token)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -238,7 +207,7 @@ func _Auth_UpdateTokens_Handler(srv interface{}, ctx context.Context, dec func(i
 		FullMethod: "/auth.Auth/UpdateTokens",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthServer).UpdateTokens(ctx, req.(*UpdateTokensRequest))
+		return srv.(AuthServer).UpdateTokens(ctx, req.(*Token))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -261,10 +230,6 @@ var Auth_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Login",
 			Handler:    _Auth_Login_Handler,
-		},
-		{
-			MethodName: "RecoverPassword",
-			Handler:    _Auth_RecoverPassword_Handler,
 		},
 		{
 			MethodName: "Verify",
