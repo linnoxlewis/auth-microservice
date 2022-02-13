@@ -13,10 +13,15 @@ type UseCaseInterface interface {
 	RegisterUser(email string, password string) (string, error)
 	ConfirmRegister(token string) (*models.User, error)
 	Login(email string, password string) (*jwt.Tokens, error)
+	GetTokensByRefresh(refreshToken string) (*jwt.Tokens, error)
+	Verify(accessToken string) (bool,error)
 }
 
-var invalidUserDataErr = errors.New("Invalid email or password")
-var userAlreadyExistErr = errors.New("User already exist")
+var (
+	invalidUserDataErr = errors.New("Invalid email or password")
+	userAlreadyExistErr = errors.New("User already exist")
+	userNotFound = errors.New("User not found")
+)
 
 type Usecase struct {
 	appConf    *config.AppConf
@@ -38,9 +43,9 @@ func NewUseCase(appConf *config.AppConf,
 }
 
 func (u *Usecase) RegisterUser(email string, password string) (string, error) {
-	passwordHash, hashErr := helpers.GetPwdHash(password,u.envConf.GetPwdSalt())
-	if hashErr != nil {
-		return "", hashErr
+	passwordHash, err := helpers.GetPwdHash(password,u.envConf.GetPwdSalt())
+	if err != nil {
+		return "", err
 	}
 	claims := models.NewRegisterClaims(email, passwordHash, u.appConf.GetRegisterDuration())
 	token, err := u.jwtService.GenerateToken(claims, u.envConf.GetJwtRegSecretKey())
@@ -60,8 +65,8 @@ func (u *Usecase) ConfirmRegister(token string) (*models.User, error) {
 	if !userExist.IsEmpty() {
 		return nil, userAlreadyExistErr
 	}
-	user, errCreate := u.userRepo.CreateUser(tokenClaims.Email, tokenClaims.Password)
-	if errCreate != nil {
+	user, err := u.userRepo.CreateUser(tokenClaims.Email, tokenClaims.Password)
+	if err != nil {
 		return nil, err
 	}
 
@@ -70,26 +75,48 @@ func (u *Usecase) ConfirmRegister(token string) (*models.User, error) {
 
 func (u *Usecase) Login(email string, password string) (*jwt.Tokens, error) {
 	user := u.userRepo.GetUserByEmail(email)
-	if !user.IsEmpty() {
+	if user.IsEmpty() {
 		return nil, invalidUserDataErr
 	}
 	if !user.IsActive() {
 		return nil, invalidUserDataErr
 	}
+
 	comparedPassword := helpers.ComparePassword(password,user.Password,u.envConf.GetPwdSalt())
 	if comparedPassword != nil {
 		return nil, invalidUserDataErr
 	}
 
-	accessClaims := models.NewAuthClaims(user.ID,u.appConf.GetAccessDuration())
-	refreshClaims := models.NewAuthClaims(user.ID,u.appConf.GetAccessDuration())
-	tokenAccess,tknAccErr := u.jwtService.GenerateToken(accessClaims,u.envConf.GetJwtAccessSecretKey())
-	if tknAccErr != nil {
-		return nil,tknAccErr
+	return u.getTokens(user.ID)
+}
+
+func (u *Usecase) GetTokensByRefresh(refreshToken string) (*jwt.Tokens, error) {
+	tokenClaims, err := u.jwtService.ParseAuthToken(refreshToken, u.envConf.GetJwtRefreshSecretKey())
+	if err != nil {
+		return nil, err
 	}
-	tokenRefresh,tknRefErr := u.jwtService.GenerateToken(refreshClaims,u.envConf.GetJwtRefreshSecretKey())
-	if tknRefErr != nil {
-		return nil,tknRefErr
+	user := u.userRepo.GetUserById(tokenClaims.Uid)
+	if user.IsEmpty() {
+		return nil, userNotFound
+	}
+
+	return u.getTokens(user.ID)
+}
+
+func (u *Usecase) Verify(accessToken string) (bool,error) {
+	return u.jwtService.Verify(accessToken,u.envConf.GetJwtAccessSecretKey())
+}
+
+func (u *Usecase) getTokens(userId uint) (*jwt.Tokens, error) {
+	accessClaims := models.NewAuthClaims(userId,u.appConf.GetAccessDuration())
+	refreshClaims := models.NewAuthClaims(userId,u.appConf.GetAccessDuration())
+	tokenAccess,err := u.jwtService.GenerateToken(accessClaims,u.envConf.GetJwtAccessSecretKey())
+	if err != nil {
+		return nil,err
+	}
+	tokenRefresh,err := u.jwtService.GenerateToken(refreshClaims,u.envConf.GetJwtRefreshSecretKey())
+	if err != nil {
+		return nil,err
 	}
 
 	return &jwt.Tokens{tokenAccess,tokenRefresh}, nil

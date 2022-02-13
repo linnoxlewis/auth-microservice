@@ -23,7 +23,7 @@ func (u *UserRepository) GetUserByEmail(email string) *models.User {
 	return user
 }
 
-func (u *UserRepository) GetUserById(id int) *models.User {
+func (u *UserRepository) GetUserById(id uint) *models.User {
 	user := &models.User{}
 	u.db.First(user, id)
 

@@ -18,11 +18,10 @@ func NewAuthServer(useCaseManager usecases.UseCaseInterface) *AuthServer {
 	}
 }
 
-func (a *AuthServer) Register(ctx context.Context, request *pb.RegisterRequest) (*pb.Token, error) {
+func (a *AuthServer) Register(_ context.Context, request *pb.RegisterRequest) (*pb.Token, error) {
 	registerForm := forms.NewRegisterForm(request.GetEmail(), request.GetPassword())
-	errValidate := registerForm.Validate()
-	if errValidate != nil {
-		return nil, errValidate
+	if err := registerForm.Validate(); err != nil {
+		return nil, err
 	}
 	token, err := a.useCaseManager.RegisterUser(registerForm.Email, registerForm.Password)
 	if err != nil {
@@ -31,11 +30,10 @@ func (a *AuthServer) Register(ctx context.Context, request *pb.RegisterRequest) 
 	return &pb.Token{Token: token}, nil
 }
 
-func (a *AuthServer) ConfirmRegister(ctx context.Context, request *pb.Token) (*pb.User, error) {
+func (a *AuthServer) ConfirmRegister(_ context.Context, request *pb.Token) (*pb.User, error) {
 	tokenForm := forms.NewTokenForm(request.GetToken())
-	errValidate := tokenForm.Validate()
-	if errValidate != nil {
-		return nil, errValidate
+	if err := tokenForm.Validate(); err != nil {
+		return nil, err
 	}
 
 	confirmedUser, err := a.useCaseManager.ConfirmRegister(tokenForm.Token)
@@ -49,19 +47,47 @@ func (a *AuthServer) ConfirmRegister(ctx context.Context, request *pb.Token) (*p
 	}, nil
 }
 
-func (a *AuthServer) Login(ctx context.Context, request *pb.LoginRequest) (*pb.Tokens, error) {
+func (a *AuthServer) Login(_ context.Context, request *pb.LoginRequest) (*pb.Tokens, error) {
 	loginForm := forms.NewLoginForm(request.GetEmail(), request.GetPassword())
-	errValidate := loginForm.Validate()
-	if errValidate != nil {
-		return nil, errValidate
+	if err := loginForm.Validate(); err != nil {
+		return nil, err
 	}
+
 	tokens, err := a.useCaseManager.Login(loginForm.Email, loginForm.Password)
 	if err != nil {
 		return nil, err
 	}
 
 	return &pb.Tokens{
-		AccessToken: tokens.AccessToken,
+		AccessToken:  tokens.AccessToken,
 		RefreshToken: tokens.RefreshToken,
 	}, nil
+}
+
+func (a *AuthServer) UpdateTokens(_ context.Context, request *pb.Token) (*pb.Tokens, error) {
+	tokenForm := forms.NewTokenForm(request.GetToken())
+	if err := tokenForm.Validate(); err != nil {
+		return nil, err
+	}
+
+	tokens, err := a.useCaseManager.GetTokensByRefresh(tokenForm.Token)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.Tokens{
+		AccessToken:  tokens.AccessToken,
+		RefreshToken: tokens.RefreshToken,
+	}, nil
+}
+
+func (a *AuthServer) Verify(_ context.Context, request *pb.Token) (*pb.Success, error) {
+	tokenForm := forms.NewTokenForm(request.GetToken())
+	if err := tokenForm.Validate(); err != nil {
+		return nil, err
+	}
+
+	validToken, err := a.useCaseManager.Verify(tokenForm.Token)
+
+	return &pb.Success{Success: validToken, Data: ""}, err
 }

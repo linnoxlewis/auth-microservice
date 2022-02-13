@@ -15,6 +15,5 @@ func GetPwdHash(pwd string, salt string) (string,error) {
 }
 
 func ComparePassword(inputPwd string,userPwd string, salt string) error {
-	pwd,_ := GetPwdHash(inputPwd,salt)
-	return bcrypt.CompareHashAndPassword([]byte(pwd),[]byte(userPwd))
+	return bcrypt.CompareHashAndPassword([]byte(userPwd),[]byte(inputPwd + salt))
 }

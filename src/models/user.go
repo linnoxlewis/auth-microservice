@@ -12,6 +12,10 @@ type User struct {
 	Status   int
 }
 
+func (u *User) IsEmpty() bool {
+	return u.ID == 0
+}
+
 func (u *User) IsActive() bool {
 	return u.Status == userStatus.ACTIVE
 }
@@ -22,8 +26,4 @@ func (u *User) IsBanned() bool {
 
 func (u *User) IsNotActive() bool {
 	return u.Status == userStatus.NOT_ACTIVE
-}
-
-func (u *User) IsEmpty() bool {
-	return u.ID == 0
 }
