@@ -16,8 +16,12 @@ func NewEnvConfig() *EnvConfig {
 	return &EnvConfig{}
 }
 
-func (e *EnvConfig) GetJwtAuthSecretKey() string {
-	return os.Getenv("JWT_AUTH_SECRET_KEY")
+func (e *EnvConfig) GetJwtAccessSecretKey() string {
+	return os.Getenv("JWT_ACCESS_SECRET_KEY")
+}
+
+func (e *EnvConfig) GetJwtRefreshSecretKey() string {
+	return os.Getenv("JWT_REFRESH_SECRET_KEY")
 }
 
 func (e *EnvConfig) GetJwtRegSecretKey() string {
@@ -54,4 +58,8 @@ func (e *EnvConfig) GetServerMode() string {
 
 func (e *EnvConfig) GetEnvironment() string {
 	return os.Getenv("ENVIRONMENT")
+}
+
+func (e *EnvConfig) GetPwdSalt() string {
+	return os.Getenv("PASSWORD_SALT")
 }

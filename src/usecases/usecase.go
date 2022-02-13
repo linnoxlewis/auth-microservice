@@ -2,6 +2,7 @@ package usecases
 
 import (
 	"auth-microservice/src/config"
+	"auth-microservice/src/helpers"
 	"auth-microservice/src/models"
 	"auth-microservice/src/repository"
 	"auth-microservice/src/services/jwt"
@@ -11,7 +12,11 @@ import (
 type UseCaseInterface interface {
 	RegisterUser(email string, password string) (string, error)
 	ConfirmRegister(token string) (*models.User, error)
+	Login(email string, password string) (*jwt.Tokens, error)
 }
+
+var invalidUserDataErr = errors.New("Invalid email or password")
+var userAlreadyExistErr = errors.New("User already exist")
 
 type Usecase struct {
 	appConf    *config.AppConf
@@ -33,7 +38,11 @@ func NewUseCase(appConf *config.AppConf,
 }
 
 func (u *Usecase) RegisterUser(email string, password string) (string, error) {
-	claims := models.NewRegisterClaims(email, password, u.appConf.GetRegisterDuration())
+	passwordHash, hashErr := helpers.GetPwdHash(password,u.envConf.GetPwdSalt())
+	if hashErr != nil {
+		return "", hashErr
+	}
+	claims := models.NewRegisterClaims(email, passwordHash, u.appConf.GetRegisterDuration())
 	token, err := u.jwtService.GenerateToken(claims, u.envConf.GetJwtRegSecretKey())
 	if err != nil {
 		return "", err
@@ -49,7 +58,7 @@ func (u *Usecase) ConfirmRegister(token string) (*models.User, error) {
 	}
 	userExist := u.userRepo.GetUserByEmail(tokenClaims.Email)
 	if !userExist.IsEmpty() {
-		return nil, errors.New("User already exist")
+		return nil, userAlreadyExistErr
 	}
 	user, errCreate := u.userRepo.CreateUser(tokenClaims.Email, tokenClaims.Password)
 	if errCreate != nil {
@@ -57,4 +66,31 @@ func (u *Usecase) ConfirmRegister(token string) (*models.User, error) {
 	}
 
 	return user, nil
+}
+
+func (u *Usecase) Login(email string, password string) (*jwt.Tokens, error) {
+	user := u.userRepo.GetUserByEmail(email)
+	if !user.IsEmpty() {
+		return nil, invalidUserDataErr
+	}
+	if !user.IsActive() {
+		return nil, invalidUserDataErr
+	}
+	comparedPassword := helpers.ComparePassword(password,user.Password,u.envConf.GetPwdSalt())
+	if comparedPassword != nil {
+		return nil, invalidUserDataErr
+	}
+
+	accessClaims := models.NewAuthClaims(user.ID,u.appConf.GetAccessDuration())
+	refreshClaims := models.NewAuthClaims(user.ID,u.appConf.GetAccessDuration())
+	tokenAccess,tknAccErr := u.jwtService.GenerateToken(accessClaims,u.envConf.GetJwtAccessSecretKey())
+	if tknAccErr != nil {
+		return nil,tknAccErr
+	}
+	tokenRefresh,tknRefErr := u.jwtService.GenerateToken(refreshClaims,u.envConf.GetJwtRefreshSecretKey())
+	if tknRefErr != nil {
+		return nil,tknRefErr
+	}
+
+	return &jwt.Tokens{tokenAccess,tokenRefresh}, nil
 }

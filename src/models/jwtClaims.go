@@ -13,7 +13,7 @@ type RegisterClaims struct {
 
 type AuthClaims struct {
 	jwt.StandardClaims
-	Uid int
+	Uid uint
 }
 
 func NewRegisterClaims(email string, password string, duration time.Duration) *RegisterClaims {
@@ -27,7 +27,7 @@ func NewRegisterClaims(email string, password string, duration time.Duration) *R
 	}
 }
 
-func NewAuthClaims(userId int, duration time.Duration) *AuthClaims {
+func NewAuthClaims(userId uint, duration time.Duration) *AuthClaims {
 	return &AuthClaims{
 		StandardClaims: jwt.StandardClaims{
 			IssuedAt:  time.Now().Unix(),

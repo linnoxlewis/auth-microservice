@@ -50,5 +50,18 @@ func (a *AuthServer) ConfirmRegister(ctx context.Context, request *pb.Token) (*p
 }
 
 func (a *AuthServer) Login(ctx context.Context, request *pb.LoginRequest) (*pb.Tokens, error) {
-	panic("implement me")
+	loginForm := forms.NewLoginForm(request.GetEmail(), request.GetPassword())
+	errValidate := loginForm.Validate()
+	if errValidate != nil {
+		return nil, errValidate
+	}
+	tokens, err := a.useCaseManager.Login(loginForm.Email, loginForm.Password)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.Tokens{
+		AccessToken: tokens.AccessToken,
+		RefreshToken: tokens.RefreshToken,
+	}, nil
 }
