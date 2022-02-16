@@ -2,39 +2,44 @@ package db
 
 import (
 	"auth-microservice/src/config"
+	"auth-microservice/src/log"
 	"fmt"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
-	"log"
 )
 
 var db *gorm.DB
 
-func newDb(cfg *config.EnvConfig) *gorm.DB {
-	log.Println("Start database Connection")
-	username := cfg.GetDbUsername()
-	password := cfg.GetDbPassword()
-	dbName := cfg.GetDbName()
-	dbHost := cfg.GetDbHost()
-	dbPort := cfg.GetDbPort()
+const dbUri = "host=%s user=%s dbname=%s port=%s sslmode=disable password=%s"
 
-	dbUri := fmt.Sprintf("host=%s user=%s dbname=%s port=%s sslmode=disable password=%s", dbHost, username, dbName, dbPort, password)
-	db, err := gorm.Open("postgres", dbUri)
+func newDb(cfg *config.EnvConfig, logger *log.Logger) *gorm.DB {
+	logger.InfoLog.Println("Start database Connection")
+	url := fmt.Sprintf(dbUri,
+		cfg.GetDbHost(),
+		cfg.GetDbUsername(),
+		cfg.GetDbName(),
+		cfg.GetDbPort(),
+		cfg.GetDbPassword(),
+	)
+
+	db, err := gorm.Open("postgres", url)
 	if err != nil {
-		panic(err)
+		logger.ErrorLog.Panic(err)
 	}
 	return db
 }
 
-func GetDB(cfg *config.EnvConfig) *gorm.DB {
+func GetDB(cfg *config.EnvConfig, logger *log.Logger) *gorm.DB {
 	if db == nil {
-		db = newDb(cfg)
+		db = newDb(cfg, logger)
 	}
 
 	return db
 }
 
-func CloseDB(db *gorm.DB) {
-	log.Println("Close database Connection")
-	_ = db.Close()
+func CloseDB(db *gorm.DB, logger *log.Logger) {
+	logger.InfoLog.Println("Close database Connection")
+	if err := db.Close(); err != nil {
+		logger.ErrorLog.Panic(err)
+	}
 }

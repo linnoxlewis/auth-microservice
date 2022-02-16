@@ -1,10 +1,10 @@
 package server
 
 import (
+	"auth-microservice/src/log"
 	"auth-microservice/src/server/grpc/pb"
 	"auth-microservice/src/usecases"
 	"google.golang.org/grpc"
-	"log"
 	"net"
 )
 
@@ -14,32 +14,32 @@ type GrpcServerInterface interface {
 }
 
 type GrpcServer struct {
-	server     *grpc.Server
-	Port       string
+	server *grpc.Server
+	port   string
+	logger *log.Logger
 }
 
-func NewGrpcServer(port string, useCaseManager usecases.UseCaseInterface) *GrpcServer {
+func NewGrpcServer(port string, useCaseManager usecases.UseCaseInterface, logger *log.Logger) *GrpcServer {
 	srv := grpc.NewServer()
-	authSrv := NewAuthServer(useCaseManager)
-	pb.RegisterAuthServer(srv,authSrv)
+	authSrv := NewAuthServer(useCaseManager, logger)
+	pb.RegisterAuthServer(srv, authSrv)
 
-	return &GrpcServer{server: srv, Port: port}
+	return &GrpcServer{server: srv, port: port, logger: logger}
 }
 
 func (g *GrpcServer) StartServer() {
-	log.Println("Auth server starting...")
-
-	l,err := net.Listen("tcp",g.Port)
+	g.logger.InfoLog.Println("Auth server starting...")
+	l, err := net.Listen("tcp", g.port)
 	if err != nil {
-		panic(err)
+		g.logger.ErrorLog.Panic(err)
 	}
 	err = g.server.Serve(l)
 	if err != nil {
-		panic(err)
+		g.logger.ErrorLog.Panic(err)
 	}
 }
 
 func (g *GrpcServer) StopServer() {
-	log.Println("Auth server stopping...")
+	g.logger.InfoLog.Println("Auth server stopping...")
 	g.server.Stop()
 }

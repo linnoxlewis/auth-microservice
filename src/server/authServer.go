@@ -1,6 +1,7 @@
 package server
 
 import (
+	"auth-microservice/src/log"
 	"auth-microservice/src/models/forms"
 	"auth-microservice/src/server/grpc/pb"
 	"auth-microservice/src/usecases"
@@ -9,12 +10,14 @@ import (
 
 type AuthServer struct {
 	useCaseManager usecases.UseCaseInterface
+	logger         *log.Logger
 	pb.UnimplementedAuthServer
 }
 
-func NewAuthServer(useCaseManager usecases.UseCaseInterface) *AuthServer {
+func NewAuthServer(useCaseManager usecases.UseCaseInterface, logger *log.Logger) *AuthServer {
 	return &AuthServer{
 		useCaseManager: useCaseManager,
+		logger:         logger,
 	}
 }
 

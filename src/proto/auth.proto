@@ -2,8 +2,6 @@ syntax = "proto3";
 
 option go_package = "/grpc/pb;pb";
 
-import "google/protobuf/empty.proto";
-
 package auth;
 
 service Auth {
