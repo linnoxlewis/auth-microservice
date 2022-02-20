@@ -23,7 +23,7 @@ func Run(ctx context.Context) {
 	database := db.GetDB(envCfg,logger)
 	defer db.CloseDB(database,logger)
 
-	jwtService := jwt.NewJwtService(appCfg)
+	jwtService := jwt.NewJwtService()
 
 	userRepo := repository.NewUserRepository(database)
 	useCaseManager := usecases.NewUseCase(appCfg, envCfg, jwtService, userRepo)

@@ -9,13 +9,7 @@ import (
 	"errors"
 )
 
-type UseCaseInterface interface {
-	RegisterUser(email string, password string) (string, error)
-	ConfirmRegister(token string) (*models.User, error)
-	Login(email string, password string) (*jwt.Tokens, error)
-	GetTokensByRefresh(refreshToken string) (*jwt.Tokens, error)
-	Verify(accessToken string) (bool,error)
-}
+
 
 var (
 	invalidUserDataErr = errors.New("Invalid email or password")
@@ -61,7 +55,10 @@ func (u *Usecase) ConfirmRegister(token string) (*models.User, error) {
 	if err != nil {
 		return nil, err
 	}
-	userExist := u.userRepo.GetUserByEmail(tokenClaims.Email)
+	userExist,err := u.userRepo.GetUserByEmail(tokenClaims.Email)
+	if err != nil {
+		return nil, err
+	}
 	if !userExist.IsEmpty() {
 		return nil, userAlreadyExistErr
 	}
@@ -74,7 +71,10 @@ func (u *Usecase) ConfirmRegister(token string) (*models.User, error) {
 }
 
 func (u *Usecase) Login(email string, password string) (*jwt.Tokens, error) {
-	user := u.userRepo.GetUserByEmail(email)
+	user,err := u.userRepo.GetUserByEmail(email)
+	if err != nil {
+		return nil, err
+	}
 	if user.IsEmpty() {
 		return nil, invalidUserDataErr
 	}
@@ -95,7 +95,10 @@ func (u *Usecase) GetTokensByRefresh(refreshToken string) (*jwt.Tokens, error) {
 	if err != nil {
 		return nil, err
 	}
-	user := u.userRepo.GetUserById(tokenClaims.Uid)
+	user,err := u.userRepo.GetUserById(tokenClaims.Uid)
+	if err != nil {
+		return nil, err
+	}
 	if user.IsEmpty() {
 		return nil, userNotFound
 	}

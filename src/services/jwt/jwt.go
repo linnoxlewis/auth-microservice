@@ -1,23 +1,10 @@
 package jwt
 
 import (
-	"auth-microservice/src/config"
 	"auth-microservice/src/models"
 	"errors"
 	"github.com/golang-jwt/jwt"
 )
-
-type JwtInterface interface {
-	GenerateToken(claims jwt.Claims, secretKey string) (string, error)
-	ParseRegisterToken(strToken string, secretKey string) (*models.RegisterClaims, error)
-	ParseAuthToken(strToken string, secretKey string) (*models.AuthClaims, error)
-	Verify(strToken string, secretKey string) (bool, error)
-}
-
-type JwtService struct {
-	issue    string
-	audience string
-}
 
 type Tokens struct {
 	AccessToken  string
@@ -27,11 +14,10 @@ type Tokens struct {
 var invalidSingErr = errors.New("Invalid method sign!")
 var claimsError = errors.New("Get token claims error")
 
-func NewJwtService(appCfg *config.AppConf) *JwtService {
-	return &JwtService{
-		issue:    appCfg.GetJwtIssue(),
-		audience: appCfg.GetJwtAudience(),
-	}
+type JwtService struct {}
+
+func NewJwtService() *JwtService {
+	return &JwtService{}
 }
 
 func (j *JwtService) GenerateToken(claims jwt.Claims, secretKey string) (string, error) {
@@ -68,7 +54,7 @@ func (j *JwtService) ParseAuthToken(strToken string, secretKey string) (*models.
 }
 
 func (j *JwtService) Verify(strToken string, secretKey string) (bool, error) {
-	token, parseErr := j.parse(strToken, jwt.StandardClaims{}, secretKey)
+	token, parseErr := j.parse(strToken, jwt.MapClaims{}, secretKey)
 	if parseErr != nil {
 		return false, parseErr
 	}

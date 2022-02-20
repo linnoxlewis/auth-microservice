@@ -1,7 +1,7 @@
 package models
 
 import (
-	"auth-microservice/src/helpers/userStatus"
+	"auth-microservice/src/helpers"
 	"github.com/jinzhu/gorm"
 )
 
@@ -17,13 +17,13 @@ func (u *User) IsEmpty() bool {
 }
 
 func (u *User) IsActive() bool {
-	return u.Status == userStatus.ACTIVE
+	return u.Status == helpers.ACTIVE
 }
 
 func (u *User) IsBanned() bool {
-	return u.Status == userStatus.BANNED
+	return u.Status == helpers.BANNED
 }
 
 func (u *User) IsNotActive() bool {
-	return u.Status == userStatus.NOT_ACTIVE
+	return u.Status == helpers.NOT_ACTIVE
 }

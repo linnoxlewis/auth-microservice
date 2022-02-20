@@ -1,4 +1,4 @@
-package userStatus
+package helpers
 
 const NOT_ACTIVE int = 1
 
