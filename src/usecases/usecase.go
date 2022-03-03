@@ -9,12 +9,18 @@ import (
 	"errors"
 )
 
-
+type UseCaseInterface interface {
+	RegisterUser(email string, password string) (string, error)
+	ConfirmRegister(token string) (*models.User, error)
+	Login(email string, password string) (*jwt.Tokens, error)
+	GetTokensByRefresh(refreshToken string) (*jwt.Tokens, error)
+	Verify(accessToken string) (bool, error)
+}
 
 var (
-	invalidUserDataErr = errors.New("Invalid email or password")
-	userAlreadyExistErr = errors.New("User already exist")
-	userNotFound = errors.New("User not found")
+	invalidUserDataErr  = errors.New("invalid email or password")
+	userAlreadyExistErr = errors.New("user already exist")
+	userNotFound        = errors.New("user not found")
 )
 
 type Usecase struct {
@@ -37,7 +43,7 @@ func NewUseCase(appConf *config.AppConf,
 }
 
 func (u *Usecase) RegisterUser(email string, password string) (string, error) {
-	passwordHash, err := helpers.GetPwdHash(password,u.envConf.GetPwdSalt())
+	passwordHash, err := helpers.GetPwdHash(password, u.envConf.GetPwdSalt())
 	if err != nil {
 		return "", err
 	}
@@ -55,7 +61,7 @@ func (u *Usecase) ConfirmRegister(token string) (*models.User, error) {
 	if err != nil {
 		return nil, err
 	}
-	userExist,err := u.userRepo.GetUserByEmail(tokenClaims.Email)
+	userExist, err := u.userRepo.GetUserByEmail(tokenClaims.Email)
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +77,7 @@ func (u *Usecase) ConfirmRegister(token string) (*models.User, error) {
 }
 
 func (u *Usecase) Login(email string, password string) (*jwt.Tokens, error) {
-	user,err := u.userRepo.GetUserByEmail(email)
+	user, err := u.userRepo.GetUserByEmail(email)
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +88,7 @@ func (u *Usecase) Login(email string, password string) (*jwt.Tokens, error) {
 		return nil, invalidUserDataErr
 	}
 
-	comparedPassword := helpers.ComparePassword(password,user.Password,u.envConf.GetPwdSalt())
+	comparedPassword := helpers.ComparePassword(password, user.Password, u.envConf.GetPwdSalt())
 	if comparedPassword != nil {
 		return nil, invalidUserDataErr
 	}
@@ -95,7 +101,7 @@ func (u *Usecase) GetTokensByRefresh(refreshToken string) (*jwt.Tokens, error) {
 	if err != nil {
 		return nil, err
 	}
-	user,err := u.userRepo.GetUserById(tokenClaims.Uid)
+	user, err := u.userRepo.GetUserById(tokenClaims.Uid)
 	if err != nil {
 		return nil, err
 	}
@@ -106,21 +112,21 @@ func (u *Usecase) GetTokensByRefresh(refreshToken string) (*jwt.Tokens, error) {
 	return u.getTokens(user.ID)
 }
 
-func (u *Usecase) Verify(accessToken string) (bool,error) {
-	return u.jwtService.Verify(accessToken,u.envConf.GetJwtAccessSecretKey())
+func (u *Usecase) Verify(accessToken string) (bool, error) {
+	return u.jwtService.Verify(accessToken, u.envConf.GetJwtAccessSecretKey())
 }
 
 func (u *Usecase) getTokens(userId uint) (*jwt.Tokens, error) {
-	accessClaims := models.NewAuthClaims(userId,u.appConf.GetAccessDuration())
-	refreshClaims := models.NewAuthClaims(userId,u.appConf.GetAccessDuration())
-	tokenAccess,err := u.jwtService.GenerateToken(accessClaims,u.envConf.GetJwtAccessSecretKey())
+	accessClaims := models.NewAuthClaims(userId, u.appConf.GetAccessDuration())
+	refreshClaims := models.NewAuthClaims(userId, u.appConf.GetAccessDuration())
+	tokenAccess, err := u.jwtService.GenerateToken(accessClaims, u.envConf.GetJwtAccessSecretKey())
 	if err != nil {
-		return nil,err
+		return nil, err
 	}
-	tokenRefresh,err := u.jwtService.GenerateToken(refreshClaims,u.envConf.GetJwtRefreshSecretKey())
+	tokenRefresh, err := u.jwtService.GenerateToken(refreshClaims, u.envConf.GetJwtRefreshSecretKey())
 	if err != nil {
-		return nil,err
+		return nil, err
 	}
 
-	return &jwt.Tokens{tokenAccess,tokenRefresh}, nil
+	return &jwt.Tokens{tokenAccess, tokenRefresh}, nil
 }

@@ -1,10 +1,9 @@
-package stringHelper
+package helpers
 
 import (
-	"time"
 	"math/rand"
+	"time"
 )
-
 
 func RandStringInt(n int) string {
 	rand.Seed(time.Now().UnixNano())

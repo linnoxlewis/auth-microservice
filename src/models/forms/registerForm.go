@@ -5,6 +5,7 @@ import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/go-ozzo/ozzo-validation/v4/is"
 	passwordvalidator "github.com/wagslane/go-password-validator"
+	"strings"
 )
 
 const MIN_PASSWORD_ENTROPY = 60
@@ -15,9 +16,14 @@ type RegisterForm struct {
 }
 
 func NewRegisterForm(email string, password string) *RegisterForm {
+	email = strings.TrimSpace(strings.ToLower(email))
+	password = strings.TrimSpace(password)
 	return &RegisterForm{email, password}
 }
 
+func NewRegisterFormIngot() *RegisterForm {
+	return &RegisterForm{}
+}
 func (r *RegisterForm) Validate() error {
 	return validation.ValidateStruct(r,
 		validation.Field(&r.Email, validation.Required, is.Email),

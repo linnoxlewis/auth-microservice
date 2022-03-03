@@ -33,6 +33,7 @@ func GetDB(cfg *config.EnvConfig, logger *log.Logger) *gorm.DB {
 	if db == nil {
 		db = newDb(cfg, logger)
 	}
+	logger.InfoLog.Println("Connecting to database...")
 
 	return db
 }

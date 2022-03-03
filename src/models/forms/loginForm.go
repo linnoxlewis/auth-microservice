@@ -3,6 +3,7 @@ package forms
 import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/go-ozzo/ozzo-validation/v4/is"
+	"strings"
 )
 
 type LoginForm struct {
@@ -11,7 +12,13 @@ type LoginForm struct {
 }
 
 func NewLoginForm(email string, password string) *LoginForm {
+	email = strings.TrimSpace(strings.ToLower(email))
+	password = strings.TrimSpace(password)
 	return &LoginForm{email, password}
+}
+
+func NewLoginFormIngot() *LoginForm {
+	return &LoginForm{}
 }
 
 func (l *LoginForm) Validate() error {

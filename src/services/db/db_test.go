@@ -10,6 +10,7 @@ import (
 
 func TestGetDB(t *testing.T) {
 	db, _, err := sqlmock.New()
+	defer db.Close()
 	if err != nil {
 		log.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}

@@ -48,8 +48,12 @@ func (e *EnvConfig) GetDbPassword() string {
 	return os.Getenv("DB_PASSWORD")
 }
 
-func (e *EnvConfig) GetServerPort() string {
-	return os.Getenv("PORT")
+func (e *EnvConfig) GetGrpcPort() string {
+	return os.Getenv("GRPC_PORT")
+}
+
+func (e *EnvConfig) GetRestPort() string {
+	return os.Getenv("REST_PORT")
 }
 
 func (e *EnvConfig) GetServerMode() string {

@@ -11,10 +11,17 @@ type Tokens struct {
 	RefreshToken string
 }
 
-var invalidSingErr = errors.New("Invalid method sign!")
-var claimsError = errors.New("Get token claims error")
+var invalidSingErr = errors.New("invalid method sign!")
+var claimsError = errors.New("get token claims error")
 
 type JwtService struct {}
+
+type JwtInterface interface {
+	GenerateToken(claims jwt.Claims, secretKey string) (string, error)
+	ParseRegisterToken(strToken string, secretKey string) (*models.RegisterClaims, error)
+	ParseAuthToken(strToken string, secretKey string) (*models.AuthClaims, error)
+	Verify(strToken string, secretKey string) (bool, error)
+}
 
 func NewJwtService() *JwtService {
 	return &JwtService{}
