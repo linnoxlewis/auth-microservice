@@ -7,8 +7,8 @@ import (
 )
 
 type LoginForm struct {
-	Email    string
-	Password string
+	Email    string `form:"email" json:"email"`
+	Password string `form:"password" json:"password"`
 }
 
 func NewLoginForm(email string, password string) *LoginForm {

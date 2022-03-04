@@ -12,6 +12,10 @@ type User struct {
 	Status   int
 }
 
+func NewUserIngot() *User{
+	return &User{}
+}
+
 func (u *User) IsEmpty() bool {
 	return u.ID == 0
 }

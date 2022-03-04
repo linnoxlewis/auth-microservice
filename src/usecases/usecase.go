@@ -3,6 +3,7 @@ package usecases
 import (
 	"auth-microservice/src/config"
 	"auth-microservice/src/helpers"
+	"auth-microservice/src/log"
 	"auth-microservice/src/models"
 	"auth-microservice/src/repository"
 	"auth-microservice/src/services/jwt"
@@ -28,28 +29,39 @@ type Usecase struct {
 	envConf    *config.EnvConfig
 	jwtService jwt.JwtInterface
 	userRepo   repository.UserRepoInterface
+	logger     *log.Logger
 }
 
 func NewUseCase(appConf *config.AppConf,
 	envConf *config.EnvConfig,
 	jwtSrv jwt.JwtInterface,
-	usrRepo repository.UserRepoInterface) *Usecase {
+	usrRepo repository.UserRepoInterface,
+	logger *log.Logger) *Usecase {
 	return &Usecase{
 		appConf:    appConf,
 		envConf:    envConf,
 		jwtService: jwtSrv,
 		userRepo:   usrRepo,
+		logger:     logger,
 	}
 }
 
 func (u *Usecase) RegisterUser(email string, password string) (string, error) {
+
+	existUser := u.userRepo.GetUserByEmail(email)
+	if !existUser.IsEmpty()  {
+		return "",userAlreadyExistErr
+	}
+
 	passwordHash, err := helpers.GetPwdHash(password, u.envConf.GetPwdSalt())
 	if err != nil {
+		u.logger.ErrorLog.Println("hash password error: ", err)
 		return "", err
 	}
 	claims := models.NewRegisterClaims(email, passwordHash, u.appConf.GetRegisterDuration())
 	token, err := u.jwtService.GenerateToken(claims, u.envConf.GetJwtRegSecretKey())
 	if err != nil {
+		u.logger.ErrorLog.Println("generate token error: ", err)
 		return "", err
 	}
 
@@ -59,17 +71,18 @@ func (u *Usecase) RegisterUser(email string, password string) (string, error) {
 func (u *Usecase) ConfirmRegister(token string) (*models.User, error) {
 	tokenClaims, err := u.jwtService.ParseRegisterToken(token, u.envConf.GetJwtRegSecretKey())
 	if err != nil {
+		u.logger.ErrorLog.Println("parse token error: ", err)
 		return nil, err
 	}
-	userExist, err := u.userRepo.GetUserByEmail(tokenClaims.Email)
-	if err != nil {
-		return nil, err
+
+	existUser := u.userRepo.GetUserByEmail(tokenClaims.Email)
+	if !existUser.IsEmpty()  {
+		return nil,userAlreadyExistErr
 	}
-	if !userExist.IsEmpty() {
-		return nil, userAlreadyExistErr
-	}
+
 	user, err := u.userRepo.CreateUser(tokenClaims.Email, tokenClaims.Password)
 	if err != nil {
+		u.logger.ErrorLog.Println("create user error: ", err)
 		return nil, err
 	}
 
@@ -77,10 +90,7 @@ func (u *Usecase) ConfirmRegister(token string) (*models.User, error) {
 }
 
 func (u *Usecase) Login(email string, password string) (*jwt.Tokens, error) {
-	user, err := u.userRepo.GetUserByEmail(email)
-	if err != nil {
-		return nil, err
-	}
+	user := u.userRepo.GetUserByEmail(email)
 	if user.IsEmpty() {
 		return nil, invalidUserDataErr
 	}
@@ -99,12 +109,10 @@ func (u *Usecase) Login(email string, password string) (*jwt.Tokens, error) {
 func (u *Usecase) GetTokensByRefresh(refreshToken string) (*jwt.Tokens, error) {
 	tokenClaims, err := u.jwtService.ParseAuthToken(refreshToken, u.envConf.GetJwtRefreshSecretKey())
 	if err != nil {
+		u.logger.ErrorLog.Println("parse token error: ", err)
 		return nil, err
 	}
-	user, err := u.userRepo.GetUserById(tokenClaims.Uid)
-	if err != nil {
-		return nil, err
-	}
+	user := u.userRepo.GetUserById(tokenClaims.Uid)
 	if user.IsEmpty() {
 		return nil, userNotFound
 	}
@@ -121,10 +129,12 @@ func (u *Usecase) getTokens(userId uint) (*jwt.Tokens, error) {
 	refreshClaims := models.NewAuthClaims(userId, u.appConf.GetAccessDuration())
 	tokenAccess, err := u.jwtService.GenerateToken(accessClaims, u.envConf.GetJwtAccessSecretKey())
 	if err != nil {
+		u.logger.ErrorLog.Println("generate access token error: ", err)
 		return nil, err
 	}
 	tokenRefresh, err := u.jwtService.GenerateToken(refreshClaims, u.envConf.GetJwtRefreshSecretKey())
 	if err != nil {
+		u.logger.ErrorLog.Println("generate refresh token error: ", err)
 		return nil, err
 	}
 

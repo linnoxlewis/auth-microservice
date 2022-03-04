@@ -6,7 +6,7 @@ import (
 )
 
 type TokenFrom struct {
-	Token string
+	Token string `form:"token" json:"token"`
 }
 
 func NewTokenForm(token string) *TokenFrom {

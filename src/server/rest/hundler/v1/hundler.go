@@ -3,6 +3,7 @@ package v1
 import (
 	"auth-microservice/src/helpers"
 	"auth-microservice/src/log"
+	"auth-microservice/src/models/apiResponse"
 	"auth-microservice/src/models/forms"
 	"auth-microservice/src/usecases"
 	"github.com/gin-gonic/gin"
@@ -27,7 +28,7 @@ func NewHundler(usecase usecases.UseCaseInterface, logger *log.Logger) *Hundler 
 
 func (h *Hundler) Register(c *gin.Context) {
 	form := forms.NewRegisterFormIngot()
-	if err := c.ShouldBindJSON(form); err != nil {
+	if err := c.ShouldBind(form); err != nil {
 		helpers.ErrorResponse(c, err)
 		return
 	}
@@ -42,12 +43,12 @@ func (h *Hundler) Register(c *gin.Context) {
 		return
 	}
 
-	helpers.SuccessResponse(c, token)
+	helpers.SuccessResponse(c, apiResponse.NewTokenApiResponse(token))
 }
 
 func (h *Hundler) ConfirmRegister(c *gin.Context) {
 	form := forms.NewTokenFormIngot()
-	if err := c.ShouldBindJSON(form); err != nil {
+	if err := c.ShouldBind(form); err != nil {
 		helpers.ErrorResponse(c, err)
 		return
 	}
@@ -62,12 +63,12 @@ func (h *Hundler) ConfirmRegister(c *gin.Context) {
 		return
 	}
 
-	helpers.SuccessResponse(c,user)
+	helpers.SuccessResponse(c,apiResponse.NewUserApiResponse(user.ID,user.Email))
 }
 
 func (h *Hundler) Login(c *gin.Context) {
 	form := forms.NewLoginFormIngot()
-	if err := c.ShouldBindJSON(form); err != nil {
+	if err := c.ShouldBind(form); err != nil {
 		helpers.ErrorResponse(c, err)
 		return
 	}
@@ -82,12 +83,12 @@ func (h *Hundler) Login(c *gin.Context) {
 		return
 	}
 
-	helpers.SuccessResponse(c, tokens)
+	helpers.SuccessResponse(c, apiResponse.NewTokensApiResponse(tokens.AccessToken,tokens.RefreshToken))
 }
 
 func (h *Hundler) Verify(c *gin.Context) {
 	form := forms.NewTokenFormIngot()
-	if err := c.ShouldBindJSON(form); err != nil {
+	if err := c.ShouldBind(form); err != nil {
 		helpers.ErrorResponse(c, err)
 		return
 	}
@@ -102,12 +103,12 @@ func (h *Hundler) Verify(c *gin.Context) {
 		return
 	}
 
-	helpers.SuccessResponse(c, isTokenValid)
+	helpers.SuccessResponse(c, apiResponse.NewSuccessApiResponse(isTokenValid,""))
 }
 
 func (h *Hundler) UpdateTokens(c *gin.Context) {
 	form := forms.NewTokenFormIngot()
-	if err := c.ShouldBindJSON(form); err != nil {
+	if err := c.ShouldBind(form); err != nil {
 		helpers.ErrorResponse(c, err)
 		return
 	}
@@ -122,5 +123,5 @@ func (h *Hundler) UpdateTokens(c *gin.Context) {
 		return
 	}
 
-	helpers.SuccessResponse(c, tokens)
+	helpers.SuccessResponse(c, apiResponse.NewTokensApiResponse(tokens.AccessToken,tokens.RefreshToken))
 }

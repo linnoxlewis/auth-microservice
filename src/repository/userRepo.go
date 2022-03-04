@@ -16,22 +16,18 @@ func NewUserRepository(db *gorm.DB) *UserRepository {
 	}
 }
 
-func (u *UserRepository) GetUserByEmail(email string) (*models.User, error) {
-	user := &models.User{}
-	if err := u.db.Where("email = ?", email).First(user).Error; err != nil {
-		return nil, err
-	}
+func (u *UserRepository) GetUserByEmail(email string) *models.User {
+	user := models.NewUserIngot()
+	u.db.Where("email = ?", email).First(user)
 
-	return user, nil
+	return user
 }
 
-func (u *UserRepository) GetUserById(id uint) (*models.User, error) {
-	user := &models.User{}
-	if err := u.db.First(user, id).Error; err != nil {
-		return nil, err
-	}
+func (u *UserRepository) GetUserById(id uint) *models.User {
+	user := models.NewUserIngot()
+	u.db.Where("id = ?", id).First(user)
 
-	return user, nil
+	return user
 }
 
 func (u *UserRepository) CreateUser(email string, password string) (*models.User, error) {

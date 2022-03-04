@@ -11,8 +11,8 @@ import (
 const MIN_PASSWORD_ENTROPY = 60
 
 type RegisterForm struct {
-	Email    string
-	Password string
+	Email    string `form:"email" json:"email"`
+	Password string `form:"password" json:"password"`
 }
 
 func NewRegisterForm(email string, password string) *RegisterForm {
