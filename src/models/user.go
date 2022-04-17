@@ -1,9 +1,12 @@
 package models
 
 import (
-	"auth-microservice/src/helpers"
 	"github.com/jinzhu/gorm"
 )
+
+const UserStatusNotActive int = 1
+
+const UserStatusActive int = 2
 
 type User struct {
 	gorm.Model
@@ -12,7 +15,7 @@ type User struct {
 	Status   int
 }
 
-func NewUserIngot() *User{
+func NewUserIngot() *User {
 	return &User{}
 }
 
@@ -21,13 +24,9 @@ func (u *User) IsEmpty() bool {
 }
 
 func (u *User) IsActive() bool {
-	return u.Status == helpers.ACTIVE
-}
-
-func (u *User) IsBanned() bool {
-	return u.Status == helpers.BANNED
+	return u.Status == UserStatusActive
 }
 
 func (u *User) IsNotActive() bool {
-	return u.Status == helpers.NOT_ACTIVE
+	return u.Status == UserStatusNotActive
 }

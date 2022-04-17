@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"auth-microservice/src/helpers"
 	"auth-microservice/src/log"
 	"auth-microservice/src/server/rest/api/v1"
 	"auth-microservice/src/usecases"
@@ -19,15 +20,13 @@ type RestServerInterface interface {
 	StopServer()
 }
 
-func NewServer(usecases usecases.UseCaseInterface,logger *log.Logger, port string) *Server {
+func NewServer(usecases usecases.UseCaseInterface, logger *log.Logger, port string) *Server {
 	router := gin.Default()
 	router.GET("/ping", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"message": "pong",
-		})
+		helpers.SuccessResponse(c, "pong")
 	})
 
-	v1.RegisterEndpoints(router,usecases,logger)
+	v1.RegisterEndpoints(router, usecases, logger)
 
 	srv := &http.Server{
 		Addr:     port,

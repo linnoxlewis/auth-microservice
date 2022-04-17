@@ -11,10 +11,10 @@ type Tokens struct {
 	RefreshToken string
 }
 
-var invalidSingErr = errors.New("invalid method sign!")
+var invalidSingErr = errors.New("invalid method sign")
 var claimsError = errors.New("get token claims error")
 
-type JwtService struct {}
+type JwtService struct{}
 
 type JwtInterface interface {
 	GenerateToken(claims jwt.Claims, secretKey string) (string, error)

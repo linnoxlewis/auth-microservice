@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-const MIN_PASSWORD_ENTROPY = 60
+const minPasswordEntropy = 60
 
 type RegisterForm struct {
 	Email    string `form:"email" json:"email"`
@@ -31,5 +31,5 @@ func (r *RegisterForm) Validate() error {
 }
 
 func checkPassword(value interface{}) error {
-	return passwordvalidator.Validate(fmt.Sprintf("%v", value), MIN_PASSWORD_ENTROPY)
+	return passwordvalidator.Validate(fmt.Sprintf("%v", value), minPasswordEntropy)
 }

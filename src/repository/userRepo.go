@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"auth-microservice/src/helpers"
 	"auth-microservice/src/models"
 	"github.com/jinzhu/gorm"
 )
@@ -34,7 +33,7 @@ func (u *UserRepository) CreateUser(email string, password string) (*models.User
 	user := &models.User{
 		Email:    email,
 		Password: password,
-		Status:   helpers.ACTIVE,
+		Status:   models.UserStatusActive,
 	}
 	if err := u.db.Create(user).Error; err != nil {
 		return nil, err

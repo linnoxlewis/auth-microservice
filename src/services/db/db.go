@@ -26,6 +26,7 @@ func newDb(cfg *config.EnvConfig, logger *log.Logger) *gorm.DB {
 	if err != nil {
 		logger.ErrorLog.Panic(err)
 	}
+
 	return db
 }
 

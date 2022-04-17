@@ -1,4 +1,7 @@
 version: "3.7"
+volumes:
+  auth_mcsrv:
+
 services:
   database:
     image: postgres
@@ -10,9 +13,9 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_DB=auth_mcsrv
     ports:
-      - "5432:5432"
+      - ${POSTGRES_PORT:-5432}:5432
     volumes:
-      - data:/var/lib/postgresql/data
+      - auth_mcsrv:/var/lib/postgresql/data
   server:
     build:
       context: .
@@ -24,5 +27,4 @@ services:
       - default
     ports:
       - "8080:8080"
-volumes:
-  data:
+      - "5301:5301"

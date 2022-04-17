@@ -1,13 +1,13 @@
 package apiResponse
 
 type TokensApiResponse struct {
-	AccessToken  string
-	RefreshToken string
+	AccessToken  string `json:"accessToken"`
+	RefreshToken string `json:"refreshToken"`
 }
 
-func NewTokensApiResponse(accessToken string,refreshToken string) *TokensApiResponse{
+func NewTokensApiResponse(accessToken string, refreshToken string) *TokensApiResponse {
 	return &TokensApiResponse{
-		AccessToken: accessToken,
+		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 	}
 }

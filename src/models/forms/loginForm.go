@@ -14,6 +14,7 @@ type LoginForm struct {
 func NewLoginForm(email string, password string) *LoginForm {
 	email = strings.TrimSpace(strings.ToLower(email))
 	password = strings.TrimSpace(password)
+
 	return &LoginForm{email, password}
 }
 

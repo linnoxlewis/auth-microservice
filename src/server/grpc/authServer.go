@@ -26,11 +26,15 @@ func (a *AuthServer) Register(_ context.Context, request *pb.RegisterRequest) (*
 	if err := registerForm.Validate(); err != nil {
 		return nil, err
 	}
+
 	token, err := a.useCaseManager.RegisterUser(registerForm.Email, registerForm.Password)
 	if err != nil {
 		return nil, err
 	}
-	return &pb.Token{Token: token}, nil
+
+	return &pb.Token{
+		Token: token,
+	}, nil
 }
 
 func (a *AuthServer) ConfirmRegister(_ context.Context, request *pb.Token) (*pb.User, error) {
@@ -92,5 +96,8 @@ func (a *AuthServer) Verify(_ context.Context, request *pb.Token) (*pb.Success, 
 
 	validToken, err := a.useCaseManager.Verify(tokenForm.Token)
 
-	return &pb.Success{Success: validToken, Data: ""}, err
+	return &pb.Success{
+		Success: validToken,
+		Data:    "",
+	}, err
 }

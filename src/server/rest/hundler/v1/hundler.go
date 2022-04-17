@@ -30,16 +30,19 @@ func (h *Hundler) Register(c *gin.Context) {
 	form := forms.NewRegisterFormIngot()
 	if err := c.ShouldBind(form); err != nil {
 		helpers.ErrorResponse(c, err)
+
 		return
 	}
 	if err := form.Validate(); err != nil {
 		helpers.ErrorResponse(c, err)
+
 		return
 	}
 
 	token, err := h.usecase.RegisterUser(form.Email, form.Password)
 	if err != nil {
 		helpers.ErrorResponse(c, err)
+
 		return
 	}
 
@@ -63,65 +66,74 @@ func (h *Hundler) ConfirmRegister(c *gin.Context) {
 		return
 	}
 
-	helpers.SuccessResponse(c,apiResponse.NewUserApiResponse(user.ID,user.Email))
+	helpers.SuccessResponse(c, apiResponse.NewUserApiResponse(user.ID, user.Email))
 }
 
 func (h *Hundler) Login(c *gin.Context) {
 	form := forms.NewLoginFormIngot()
 	if err := c.ShouldBind(form); err != nil {
 		helpers.ErrorResponse(c, err)
+
 		return
 	}
 	if err := form.Validate(); err != nil {
 		helpers.ErrorResponse(c, err)
+
 		return
 	}
 
-	tokens, err := h.usecase.Login(form.Email,form.Password)
+	tokens, err := h.usecase.Login(form.Email, form.Password)
 	if err != nil {
 		helpers.ErrorResponse(c, err)
+
 		return
 	}
 
-	helpers.SuccessResponse(c, apiResponse.NewTokensApiResponse(tokens.AccessToken,tokens.RefreshToken))
+	helpers.SuccessResponse(c, apiResponse.NewTokensApiResponse(tokens.AccessToken, tokens.RefreshToken))
 }
 
 func (h *Hundler) Verify(c *gin.Context) {
 	form := forms.NewTokenFormIngot()
 	if err := c.ShouldBind(form); err != nil {
 		helpers.ErrorResponse(c, err)
+
 		return
 	}
 	if err := form.Validate(); err != nil {
 		helpers.ErrorResponse(c, err)
+
 		return
 	}
 
 	isTokenValid, err := h.usecase.Verify(form.Token)
 	if err != nil {
 		helpers.ErrorResponse(c, err)
+
 		return
 	}
 
-	helpers.SuccessResponse(c, apiResponse.NewSuccessApiResponse(isTokenValid,""))
+	helpers.SuccessResponse(c, apiResponse.NewSuccessApiResponse(isTokenValid, ""))
 }
 
 func (h *Hundler) UpdateTokens(c *gin.Context) {
 	form := forms.NewTokenFormIngot()
 	if err := c.ShouldBind(form); err != nil {
 		helpers.ErrorResponse(c, err)
+
 		return
 	}
 	if err := form.Validate(); err != nil {
 		helpers.ErrorResponse(c, err)
+
 		return
 	}
 
 	tokens, err := h.usecase.GetTokensByRefresh(form.Token)
 	if err != nil {
 		helpers.ErrorResponse(c, err)
+
 		return
 	}
 
-	helpers.SuccessResponse(c, apiResponse.NewTokensApiResponse(tokens.AccessToken,tokens.RefreshToken))
+	helpers.SuccessResponse(c, apiResponse.NewTokensApiResponse(tokens.AccessToken, tokens.RefreshToken))
 }

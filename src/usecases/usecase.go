@@ -5,6 +5,7 @@ import (
 	"auth-microservice/src/helpers"
 	"auth-microservice/src/log"
 	"auth-microservice/src/models"
+	"auth-microservice/src/models/consts"
 	"auth-microservice/src/repository"
 	"auth-microservice/src/services/jwt"
 	"errors"
@@ -19,9 +20,12 @@ type UseCaseInterface interface {
 }
 
 var (
-	invalidUserDataErr  = errors.New("invalid email or password")
-	userAlreadyExistErr = errors.New("user already exist")
-	userNotFound        = errors.New("user not found")
+	errInvalidUserData  = errors.New(consts.ErrInvalidEmailOrPassword)
+	errUserAlreadyExist = errors.New(consts.ErrUserAlreadyExist)
+	errUserNotFound     = errors.New(consts.ErrUserNotFound)
+	errInternalServer   = errors.New(consts.ErrInternalServer)
+	errUserStatus       = errors.New(consts.ErrUserNotActive)
+	errTokenInvalid     = errors.New(consts.ErrInvalidToken)
 )
 
 type Usecase struct {
@@ -47,22 +51,23 @@ func NewUseCase(appConf *config.AppConf,
 }
 
 func (u *Usecase) RegisterUser(email string, password string) (string, error) {
-
 	existUser := u.userRepo.GetUserByEmail(email)
-	if !existUser.IsEmpty()  {
-		return "",userAlreadyExistErr
+	if !existUser.IsEmpty() {
+		return "", errUserAlreadyExist
 	}
 
 	passwordHash, err := helpers.GetPwdHash(password, u.envConf.GetPwdSalt())
 	if err != nil {
 		u.logger.ErrorLog.Println("hash password error: ", err)
-		return "", err
+
+		return "", errInternalServer
 	}
 	claims := models.NewRegisterClaims(email, passwordHash, u.appConf.GetRegisterDuration())
 	token, err := u.jwtService.GenerateToken(claims, u.envConf.GetJwtRegSecretKey())
 	if err != nil {
 		u.logger.ErrorLog.Println("generate token error: ", err)
-		return "", err
+
+		return "", errInternalServer
 	}
 
 	return token, nil
@@ -72,18 +77,20 @@ func (u *Usecase) ConfirmRegister(token string) (*models.User, error) {
 	tokenClaims, err := u.jwtService.ParseRegisterToken(token, u.envConf.GetJwtRegSecretKey())
 	if err != nil {
 		u.logger.ErrorLog.Println("parse token error: ", err)
-		return nil, err
+
+		return nil, errTokenInvalid
 	}
 
 	existUser := u.userRepo.GetUserByEmail(tokenClaims.Email)
-	if !existUser.IsEmpty()  {
-		return nil,userAlreadyExistErr
+	if !existUser.IsEmpty() {
+		return nil, errUserAlreadyExist
 	}
 
 	user, err := u.userRepo.CreateUser(tokenClaims.Email, tokenClaims.Password)
 	if err != nil {
 		u.logger.ErrorLog.Println("create user error: ", err)
-		return nil, err
+
+		return nil, errInternalServer
 	}
 
 	return user, nil
@@ -92,15 +99,15 @@ func (u *Usecase) ConfirmRegister(token string) (*models.User, error) {
 func (u *Usecase) Login(email string, password string) (*jwt.Tokens, error) {
 	user := u.userRepo.GetUserByEmail(email)
 	if user.IsEmpty() {
-		return nil, invalidUserDataErr
+		return nil, errInvalidUserData
 	}
 	if !user.IsActive() {
-		return nil, invalidUserDataErr
+		return nil, errUserStatus
 	}
 
 	comparedPassword := helpers.ComparePassword(password, user.Password, u.envConf.GetPwdSalt())
 	if comparedPassword != nil {
-		return nil, invalidUserDataErr
+		return nil, errInvalidUserData
 	}
 
 	return u.getTokens(user.ID)
@@ -110,33 +117,49 @@ func (u *Usecase) GetTokensByRefresh(refreshToken string) (*jwt.Tokens, error) {
 	tokenClaims, err := u.jwtService.ParseAuthToken(refreshToken, u.envConf.GetJwtRefreshSecretKey())
 	if err != nil {
 		u.logger.ErrorLog.Println("parse token error: ", err)
-		return nil, err
+
+		return nil, errTokenInvalid
 	}
+
 	user := u.userRepo.GetUserById(tokenClaims.Uid)
 	if user.IsEmpty() {
-		return nil, userNotFound
+		return nil, errUserNotFound
 	}
 
 	return u.getTokens(user.ID)
 }
 
 func (u *Usecase) Verify(accessToken string) (bool, error) {
-	return u.jwtService.Verify(accessToken, u.envConf.GetJwtAccessSecretKey())
+	verify, err := u.jwtService.Verify(accessToken, u.envConf.GetJwtAccessSecretKey())
+	if err != nil {
+		u.logger.ErrorLog.Println("verify access token error: ", err)
+
+		return false, errTokenInvalid
+	}
+
+	return verify, nil
 }
 
 func (u *Usecase) getTokens(userId uint) (*jwt.Tokens, error) {
 	accessClaims := models.NewAuthClaims(userId, u.appConf.GetAccessDuration())
 	refreshClaims := models.NewAuthClaims(userId, u.appConf.GetAccessDuration())
+
 	tokenAccess, err := u.jwtService.GenerateToken(accessClaims, u.envConf.GetJwtAccessSecretKey())
 	if err != nil {
 		u.logger.ErrorLog.Println("generate access token error: ", err)
-		return nil, err
+
+		return nil, errInternalServer
 	}
+
 	tokenRefresh, err := u.jwtService.GenerateToken(refreshClaims, u.envConf.GetJwtRefreshSecretKey())
 	if err != nil {
 		u.logger.ErrorLog.Println("generate refresh token error: ", err)
-		return nil, err
+
+		return nil, errInternalServer
 	}
 
-	return &jwt.Tokens{tokenAccess, tokenRefresh}, nil
+	return &jwt.Tokens{
+		AccessToken:  tokenAccess,
+		RefreshToken: tokenRefresh,
+	}, nil
 }
