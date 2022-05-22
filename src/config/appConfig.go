@@ -6,16 +6,16 @@ import (
 	"time"
 )
 
-const FILE_PATH = "src/config"
-const CONFIG_NAME = "config"
-const CONFIG_TYPE = "yaml"
+const FilePath = "src/config"
+const ConfigName = "config"
+const ConfigType = "yaml"
 
 type AppConf struct{}
 
 func Init() *AppConf {
-	viper.AddConfigPath(FILE_PATH)
-	viper.SetConfigName(CONFIG_NAME)
-	viper.SetConfigType(CONFIG_TYPE)
+	viper.AddConfigPath(FilePath)
+	viper.SetConfigName(ConfigName)
+	viper.SetConfigType(ConfigType)
 
 	err := viper.ReadInConfig()
 	if err != nil {

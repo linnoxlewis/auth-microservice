@@ -10,7 +10,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "Init auth microservice",
 	Short: "Authorisation microservice ",

@@ -19,27 +19,27 @@ func Run(ctx context.Context) {
 	appCfg := config.Init()
 	envCfg := config.NewEnvConfig()
 
-	logger:= log.NewLogger()
-	database := db.GetDB(envCfg,logger)
-	defer db.CloseDB(database,logger)
+	logger := log.NewLogger()
+	database := db.GetDB(envCfg, logger)
+	defer db.CloseDB(database, logger)
 
 	jwtService := jwt.NewJwtService()
 
 	userRepo := repository.NewUserRepository(database)
-	useCaseManager := usecases.NewUseCase(appCfg, envCfg, jwtService, userRepo,logger)
+	useCaseManager := usecases.NewUseCase(appCfg, envCfg, jwtService, userRepo, logger)
 
-	srv := grpc.NewGrpcServer(envCfg.GetGrpcPort(), useCaseManager,logger)
+	srv := grpc.NewGrpcServer(envCfg.GetGrpcPort(), useCaseManager, logger)
 	go srv.StartServer()
 	defer srv.StopServer()
 
-	restSrv := rest.NewServer(useCaseManager,logger,envCfg.GetRestPort())
+	restSrv := rest.NewServer(useCaseManager, logger, envCfg.GetRestPort())
 	go restSrv.StartServer()
 	defer restSrv.StopServer()
 
 	sgn := make(chan os.Signal, 1)
 	signal.Notify(sgn, syscall.SIGINT, syscall.SIGTERM)
 	select {
-	case <-ctx.Done():
-	case <-sgn:
+		case <-ctx.Done():
+		case <-sgn:
 	}
 }

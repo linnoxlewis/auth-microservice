@@ -4,13 +4,12 @@ import (
 	"github.com/joho/godotenv"
 	"os"
 )
-
-const ENV_NAME = ".env"
+const EnvName = ".env"
 
 type EnvConfig struct{}
 
 func NewEnvConfig() *EnvConfig {
-	if err := godotenv.Load(ENV_NAME); err != nil {
+	if err := godotenv.Load(EnvName); err != nil {
 		panic(err)
 	}
 	return &EnvConfig{}

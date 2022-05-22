@@ -53,16 +53,19 @@ func (h *Hundler) ConfirmRegister(c *gin.Context) {
 	form := forms.NewTokenFormIngot()
 	if err := c.ShouldBind(form); err != nil {
 		helpers.ErrorResponse(c, err)
+
 		return
 	}
 	if err := form.Validate(); err != nil {
 		helpers.ErrorResponse(c, err)
+
 		return
 	}
 
 	user, err := h.usecase.ConfirmRegister(form.Token)
 	if err != nil {
 		helpers.ErrorResponse(c, err)
+
 		return
 	}
 
